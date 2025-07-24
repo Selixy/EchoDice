@@ -1,0 +1,44 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Test",
+      "type": "process",
+      "command": "cmd.exe",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\script\\test.bat"],
+      "options": {
+        "statusbar": {
+          "label": "$(beaker) Test",
+          "color": "#2196F3",
+          "detail": "Lancer les tests unitaires"
+        }
+      }
+    },
+    {
+      "label": "Lancer en debug",
+      "type": "process",
+      "command": "cmd.exe",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\script\\run_debug.bat"],
+      "options": {
+        "statusbar": {
+          "label": "$(rocket) Debug",
+          "color": "#4CAF50",
+          "detail": "Compiler et lancer EchoDice"
+        }
+      }
+    },
+    {
+      "label": "Lancer en release",
+      "type": "process",
+      "command": "cmd.exe",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\script\\run_release.bat"],
+      "options": {
+        "statusbar": {
+          "label": "$(rocket) Release",
+          "color": "#ef1f08",
+          "detail": "Compiler et lancer EchoDice"
+        }
+      }
+    }
+  ]
+}
