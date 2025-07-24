@@ -1,5 +1,8 @@
 @echo off
 cls
+for /L %%i in (1,1,100) do echo.
+cls
+
 
 REM Compilation
 cd /d "%~dp0"
@@ -12,7 +15,7 @@ cd /d "%~dp0"
 cd build
 call clean.bat
 if errorlevel 1 exit /b 1
-cls
+
 
 REM Lancement du binaire
 cd /d "%~dp0"

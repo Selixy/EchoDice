@@ -1,8 +1,15 @@
+use std::ffi::CStr;
+
 #[link(name = "echo_dice", kind = "static")]
 extern "C" {
-    fn add_from_cpp(a: i32, b: i32) -> i32;
+    fn Test_WebRTC() -> *const std::os::raw::c_char;
 }
 
-pub fn add_via_cpp(a: i32, b: i32) -> i32 {
-    unsafe { add_from_cpp(a, b) }
+
+pub fn test_webrtc() -> &'static str {
+    unsafe {
+        let c_str = Test_WebRTC();
+        CStr::from_ptr(c_str).to_str().expect("Invalid UTF-8")
+    }
 }
+

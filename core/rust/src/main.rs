@@ -1,5 +1,5 @@
-use echodice::add_via_cpp;
+use echodice::test_webrtc;
 
 fn main() {
-    println!("2 + 3 = {}", add_via_cpp(2, 3));
+    println!("Lib WebRTC dit : {}", test_webrtc());
 }

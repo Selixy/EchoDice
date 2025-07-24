@@ -2,59 +2,56 @@
 setlocal
 
 REM ─────────────────────────────────────────────
-REM Activer l’environnement MSVC
+REM 1) Active l’environnement MSVC
 cd /d "%~dp0\..\..\.."
-for /f "usebackq tokens=1,* delims==" %%i in (".env/path") do set %%i=%%~j
+for /f "usebackq tokens=1,* delims==" %%i in (".env\path") do set %%i=%%~j
 if not defined VS_VC_PATH (
-    echo Erreur : VS_VC_PATH non défini.
-    exit /b 1
+  echo ❌ VS_VC_PATH non défini.
+  exit /b 1
 )
 call "%VS_VC_PATH%"
 set PATH=%NINJA_PATH%;%PATH%
 
 REM ─────────────────────────────────────────────
-REM CMake Configuration (mode Release)
-cd core\cpp
-cmake -G "Ninja" -B ../../build/cpp -DCMAKE_BUILD_TYPE=Release
+REM 2) Configure & génère C++ (Release) avec vcpkg
+pushd core\cpp
+cmake -S . -B ..\..\build\cpp ^
+  -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DCMAKE_TOOLCHAIN_FILE=..\..\lib\cpp\vcpkg\scripts\buildsystems\vcpkg.cmake ^
+  -DVCPKG_TARGET_TRIPLET=x64-windows
 if errorlevel 1 exit /b 1
 
-REM CMake Build
-cmake --build ../../build/cpp --config Release
+REM 3) Compile
+cmake --build ..\..\build\cpp
 if errorlevel 1 exit /b 1
 
-REM CMake Install
-cmake --install ../../build/cpp --prefix ../../build/cpp/install
+REM 5) (Optionnel) Installe dans build\cpp\install
+cmake --install ..\..\build\cpp --prefix ..\..\build\cpp\install
 if errorlevel 1 exit /b 1
-cls
+
+REM Retour au dossier d’origine
+popd
 
 REM ─────────────────────────────────────────────
-REM Compilation Rust
-cd ..\rust
+REM 6) Compilation Rust
+cd core\rust
 set CARGO_TARGET_DIR=..\..\build
 cargo build --release
 if errorlevel 1 exit /b 1
-cls
 
 REM ─────────────────────────────────────────────
-REM Préparation du dossier final
+REM 7) Organisation finale
 cd ..\..\build
 if not exist EchoDice mkdir EchoDice
 if not exist EchoDice\Win64 mkdir EchoDice\Win64
 
-
-REM ─────────────────────────────────────────────
-REM Déplacement des binaires
+REM 8) Déplacement des binaires Rust
 if exist release\echodice.exe (
-    move /Y release\echodice.exe EchoDice\Win64\
-    if errorlevel 1 exit /b 1
+  move /Y release\echodice.exe EchoDice\Win64\
 )
 if exist release\libechodice.rlib (
-    move /Y release\libechodice.rlib EchoDice\Win64\
-    if errorlevel 1 exit /b 1
+  move /Y release\libechodice.rlib EchoDice\Win64\
 )
-cls
 
-echo Build termine avec succes.
 exit /b 0
-
-

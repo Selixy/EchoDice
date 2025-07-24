@@ -6,7 +6,6 @@ cd /d "%~dp0"
 cd build
 call build_Win64_Debug.bat
 if errorlevel 1 exit /b 1
-cls
 
 REM Nettoyage
 cd /d "%~dp0"
