@@ -1,5 +1,12 @@
-use echodice::test_webrtc;
+// src/main.rs
+
+mod api;
+mod cli;
+
+use cli::run_cli;
+use cli::clear;
 
 fn main() {
-    println!("Lib WebRTC dit : {}", test_webrtc());
+    clear();
+    run_cli();
 }

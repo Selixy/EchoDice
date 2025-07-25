@@ -1,57 +1,89 @@
 @echo off
-setlocal
+setlocal enableextensions enabledelayedexpansion
+cls
 
-REM ─────────────────────────────────────────────
-REM 1) Active l’environnement MSVC
+rem ─────────────────────────────────────────────
+rem 1) Aller à la racine du projet (2 niveaux sous .vscode\script)
 cd /d "%~dp0\..\..\.."
-for /f "usebackq tokens=1,* delims==" %%i in (".env\path") do set %%i=%%~j
+set "ROOT_DIR=%CD%"
+set "BUILD_DIR=%ROOT_DIR%\build"
+set "BUILD_CPP_DIR=%BUILD_DIR%\cpp"
+set "BUILD_RUST_DIR=%BUILD_DIR%\rust"
+set "OUTPUT_DIR=%BUILD_DIR%\EchoDice"
+
+echo.
+echo [1/6] Project root: %ROOT_DIR%
+
+rem ─────────────────────────────────────────────
+rem 2) Charger MSVC & Ninja
+for /f "usebackq tokens=1,* delims==" %%I in (".env\path") do set "%%I=%%~J"
 if not defined VS_VC_PATH (
-  echo ❌ VS_VC_PATH non défini.
+  echo ERROR: VS_VC_PATH not defined.
   exit /b 1
 )
 call "%VS_VC_PATH%"
-set PATH=%NINJA_PATH%;%PATH%
+if not defined NINJA_PATH (
+  echo ERROR: NINJA_PATH not defined.
+  exit /b 1
+)
+set "PATH=%NINJA_PATH%;%PATH%"
 
-REM ─────────────────────────────────────────────
-REM 2) Configure & génère C++ (Release) avec vcpkg
-pushd core\cpp
-cmake -S . -B ..\..\build\cpp ^
-  -G "Ninja" ^
+echo.
+echo [2/6] Nettoyer et préparer build\cpp et build\EchoDice
+if exist "%BUILD_DIR%" (
+  rd /s /q "%BUILD_DIR%" || (
+    echo ERROR: impossible de supprimer %BUILD_DIR%
+    exit /b 1
+  )
+)
+mkdir "%BUILD_CPP_DIR%" "%OUTPUT_DIR%" || (
+  echo ERROR: impossible de créer les dossiers de build
+  exit /b 1
+)
+
+echo.
+echo [3/6] Configuring and building C++ (verbose)...
+cmake -S "%ROOT_DIR%\core\cpp" -B "%BUILD_CPP_DIR%" -G Ninja ^
   -DCMAKE_BUILD_TYPE=Release ^
-  -DCMAKE_TOOLCHAIN_FILE=..\..\lib\cpp\vcpkg\scripts\buildsystems\vcpkg.cmake ^
-  -DVCPKG_TARGET_TRIPLET=x64-windows
-if errorlevel 1 exit /b 1
-
-REM 3) Compile
-cmake --build ..\..\build\cpp
-if errorlevel 1 exit /b 1
-
-REM 5) (Optionnel) Installe dans build\cpp\install
-cmake --install ..\..\build\cpp --prefix ..\..\build\cpp\install
-if errorlevel 1 exit /b 1
-
-REM Retour au dossier d’origine
-popd
-
-REM ─────────────────────────────────────────────
-REM 6) Compilation Rust
-cd core\rust
-set CARGO_TARGET_DIR=..\..\build
-cargo build --release
-if errorlevel 1 exit /b 1
-
-REM ─────────────────────────────────────────────
-REM 7) Organisation finale
-cd ..\..\build
-if not exist EchoDice mkdir EchoDice
-if not exist EchoDice\Win64 mkdir EchoDice\Win64
-
-REM 8) Déplacement des binaires Rust
-if exist release\echodice.exe (
-  move /Y release\echodice.exe EchoDice\Win64\
+  -DCMAKE_TOOLCHAIN_FILE="%ROOT_DIR%\lib\cpp\vcpkg\scripts\buildsystems\vcpkg.cmake" ^
+  -DVCPKG_TARGET_TRIPLET=x64-windows 
+if errorlevel 1 (
+  echo.
+  echo *** ERROR: CMake configuration failed ***
+  exit /b 1
 )
-if exist release\libechodice.rlib (
-  move /Y release\libechodice.rlib EchoDice\Win64\
+
+cmake --build "%BUILD_CPP_DIR%" --config Release --verbose
+if errorlevel 1 (
+  echo.
+  echo *** ERROR: C++ build failed ***
+  exit /b 1
 )
+
+echo.
+echo [4/6] Copying C++ DLLs and LIBs to output
+copy /Y "%BUILD_CPP_DIR%\API_Network.dll" "%OUTPUT_DIR%\" || echo Warning: failed to copy API_Network.dll
+copy /Y "%BUILD_CPP_DIR%\API_Network.lib" "%OUTPUT_DIR%\echodice_api.lib" || echo Warning: failed to copy API_Network.lib
+copy /Y "%ROOT_DIR%\lib\cpp\vcpkg\installed\x64-windows\bin\*.dll" "%OUTPUT_DIR%\" || echo Warning: failed to copy runtime DLLs
+
+echo.
+echo [5/6] Building Rust (verbose)...
+cd /d "%ROOT_DIR%\core\rust"
+set "CARGO_TARGET_DIR=%BUILD_RUST_DIR%"
+set "RUSTFLAGS=-L native=%OUTPUT_DIR% -l static=echodice_api"
+echo   RUSTFLAGS=%RUSTFLAGS%
+
+cargo build --release --verbose
+if errorlevel 1 (
+  echo.
+  echo *** ERROR: Rust build failed ***
+  exit /b 1
+)
+cls
+
+echo.
+echo [6/6] Copying executable & rlib to output
+copy /Y "%BUILD_RUST_DIR%\release\echodice.exe"     "%OUTPUT_DIR%\" || echo Warning: failed to copy echodice.exe
+copy /Y "%BUILD_RUST_DIR%\release\libechodice.rlib" "%OUTPUT_DIR%\" || echo Warning: failed to copy libechodice.rlib
 
 exit /b 0

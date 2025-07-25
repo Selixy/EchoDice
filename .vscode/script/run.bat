@@ -21,7 +21,7 @@ REM Lancement du binaire
 cd /d "%~dp0"
 if "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
     echo Architecture : Windows x64
-    cd ..\..\build\EchoDice\Win64
+    cd ..\..\build\EchoDice
 ) else if "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
     echo Architecture : Windows ARM64
 )
