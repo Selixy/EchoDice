@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef _WIN32
-  #ifdef API_Network_EXPORTS    // CMake injecte -DAPI_Network_EXPORTS
+  #ifdef API_NETWORK_EXPORTS
     #define API_NETWORK_API __declspec(dllexport)
   #else
     #define API_NETWORK_API __declspec(dllimport)
@@ -11,6 +11,10 @@
 #endif
 
 extern "C" {
-  API_NETWORK_API char* generate_sdp_offer();
-  API_NETWORK_API void  free_sdp(char* ptr);
-}
+
+// … tes autres déclarations …
+
+/// Appelée à chaque tick de la boucle Rust
+API_NETWORK_API void network_Update();
+
+} // extern "C"

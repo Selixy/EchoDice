@@ -1,12 +1,12 @@
-// core/rust/src/main.rs
+// src/main.rs
 
-use echodice::get_sdp_offer;
+mod api;
+mod cli;
+
+use cli::run_cli;
+use cli::clear;
 
 fn main() {
-    let sdp = get_sdp_offer();
-    if sdp.is_empty() {
-        eprintln!("Impossible de générer le SDP offer.");
-        std::process::exit(1);
-    }
-    println!("=== SDP Offer ===\n{}", sdp);
+    clear();
+    run_cli();
 }
