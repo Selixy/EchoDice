@@ -12,9 +12,7 @@
 
 extern "C" {
 
-// … tes autres déclarations …
-
-/// Appelée à chaque tick de la boucle Rust
-API_Cpp void network_Update();
+API_Cpp void network_Init();
+API_Cpp void network_Shutdown();
 
 } // extern "C"

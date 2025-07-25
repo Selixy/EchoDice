@@ -7,10 +7,6 @@ API_Cpp void network_Init() {
     network::init();
 }
 
-API_Cpp void network_Update() {
-    network::tick();
-}
-
 API_Cpp void network_Shutdown() {
     network::shutdown();
 }
