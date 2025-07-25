@@ -1,44 +1,41 @@
 cmake_minimum_required(VERSION 3.10)
-project(echo_dice LANGUAGES CXX)
+project(API_Network LANGUAGES CXX)
 
-# ───────────────────────────────────────────────
-# Utiliser C++17 strict sans extensions
-set(CMAKE_CXX_STANDARD 17)
+# ─────────────────────────────────────────────────────────────
+# 1) C++17 strict
+set(CMAKE_CXX_STANDARD       17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS     OFF)
 
-# ───────────────────────────────────────────────
-# 1) Récupération automatique de tous les .cpp sous src/
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+# ─────────────────────────────────────────────────────────────
+# 2) Sources (wrapper C + code core)
+file(GLOB_RECURSE API_SOURCES
+    src/*.cpp
+)
 
-# ───────────────────────────────────────────────
-# 2) Création de la librairie statique echo_dice
-add_library(echo_dice STATIC ${SOURCES})
+# ─────────────────────────────────────────────────────────────
+# 3) Création de la DLL API_Network
+add_library(API_Network SHARED ${API_SOURCES})
 
-# 2.1) Exposer le dossier include/
-target_include_directories(echo_dice PUBLIC
+target_compile_definitions(API_Network
+    PRIVATE API_Network_EXPORTS
+    PUBLIC  HAVE_WEBRTC
+)
+
+target_include_directories(API_Network PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
 
-# ───────────────────────────────────────────────
-# 3) Intégration de libdatachannel via vcpkg
+# ─────────────────────────────────────────────────────────────
+# 4) Intégration libdatachannel (vcpkg)
 find_package(LibDataChannel CONFIG REQUIRED)
 
-message(STATUS "CMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
-message(STATUS "VCPKG_TARGET_TRIPLET = ${VCPKG_TARGET_TRIPLET}")
-
-# 3.1) Définir la macro pour activer les portions WebRTC dans ton code
-target_compile_definitions(echo_dice PUBLIC
-    HAVE_WEBRTC
-)
-
-# 3.2) Lier la target importée
-target_link_libraries(echo_dice PUBLIC
+target_link_libraries(API_Network PUBLIC
     LibDataChannel::LibDataChannel
 )
 
-# ───────────────────────────────────────────────
-# 4) (Optionnel) générer du code position-indépendant
-set_target_properties(echo_dice PROPERTIES
+# ─────────────────────────────────────────────────────────────
+# 5) Position-independent (utile si on embed plus tard)
+set_target_properties(API_Network PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )

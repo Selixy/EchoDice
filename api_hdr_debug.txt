@@ -1,0 +1,17 @@
+
+#pragma once
+
+
+  
+    
+  
+
+
+
+
+
+
+extern "C" {
+  __declspec(dllexport) char* generate_sdp_offer();
+  __declspec(dllexport) void  free_sdp(char* ptr);
+}

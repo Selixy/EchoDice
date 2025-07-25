@@ -1,15 +1,22 @@
+#![allow(dead_code)]   // optionnel, pour éviter des warnings
+
+#[link(name = "echodice_api")]
+extern "C" {
+    fn generate_sdp_offer() -> *mut std::os::raw::c_char;
+    fn free_sdp(ptr: *mut std::os::raw::c_char);
+}
+
 use std::ffi::CStr;
 
-#[link(name = "echo_dice", kind = "static")]
-extern "C" {
-    fn Test_WebRTC() -> *const std::os::raw::c_char;
-}
-
-
-pub fn test_webrtc() -> &'static str {
+/// Génère une offre SDP via la DLL `echodice_api`.
+pub fn get_sdp_offer() -> String {
     unsafe {
-        let c_str = Test_WebRTC();
-        CStr::from_ptr(c_str).to_str().expect("Invalid UTF-8")
+        let ptr = generate_sdp_offer();
+        if ptr.is_null() {
+            return String::new();
+        }
+        let s = CStr::from_ptr(ptr).to_string_lossy().into_owned();
+        free_sdp(ptr);
+        s
     }
 }
-
