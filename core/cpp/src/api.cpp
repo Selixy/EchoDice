@@ -3,15 +3,15 @@
 
 extern "C" {
 
-API_NETWORK_API void network_Init() {
+API_Cpp void network_Init() {
     network::init();
 }
 
-API_NETWORK_API void network_Update() {
+API_Cpp void network_Update() {
     network::tick();
 }
 
-API_NETWORK_API void network_Shutdown() {
+API_Cpp void network_Shutdown() {
     network::shutdown();
 }
 
