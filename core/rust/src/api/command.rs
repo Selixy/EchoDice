@@ -11,7 +11,7 @@ pub struct CommandDesc {
     /// message à afficher en exécutant la commande
     pub message: &'static str,
     /// fonction à appeler
-    pub callback: fn(),
+    pub callback: fn(Option<&str>),
 }
 
 // instancie l’inventaire

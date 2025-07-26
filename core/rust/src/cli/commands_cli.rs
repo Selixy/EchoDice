@@ -19,7 +19,7 @@ inventory::submit! {
         name:        "help",
         description: "afficher la liste des commandes",
         message:     "[CLI] help:",
-        callback:    help,
+        callback:    |_arg| help(),
     }
 }
 
@@ -29,6 +29,6 @@ inventory::submit! {
         name:        "stop",
         description: "arrêter la boucle CLI",
         message:     "[CLI] au revoir !",
-        callback:    stop_cli,
+        callback:    |_arg| stop_cli(),
     }
 }
