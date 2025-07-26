@@ -3,35 +3,20 @@
 #include <unordered_map>
 #include <memory>
 #include <mutex>
-#include "rtc/rtc.hpp"
+#include <rtc/rtc.hpp>
 
 namespace network {
 
-/// Gère plusieurs PeerConnection identifiés par un peerId.
-/// - createPeer()      → instancie le peer
-/// - createOffer(id)   → génère/retourne l’offer SDP pour ce peer
-/// - connectTo(id, sdp)→ applique l’offer et retourne l’answer SDP
-/// - removePeer(id)    → ferme et supprime la connexion
-/// - shutdownAll()     → ferme tous les peers
 class PeerManager {
 public:
-    void createPeer(const std::string& peerId);
-    std::string createOffer(const std::string& peerId);
-    std::string connectTo(const std::string& peerId, const std::string& remoteSdp);
-    void removePeer(const std::string& peerId);
-    void shutdownAll();
+    void insert(const std::string& id, std::shared_ptr<rtc::PeerConnection> peer);
+    std::shared_ptr<rtc::PeerConnection> get(const std::string& id);
+    void remove(const std::string& id);
+    void clear();
 
 private:
-    struct Peer {
-        std::shared_ptr<rtc::PeerConnection> pc;
-        std::mutex                          mtx;
-        std::string                         lastSdp;
-    };
-
-    std::unordered_map<std::string, std::unique_ptr<Peer>> peers_;
-    std::mutex                                             mapMtx_;
-
-    void ensurePeerInitialized(Peer& peer);
+    std::unordered_map<std::string, std::shared_ptr<rtc::PeerConnection>> peers_;
+    std::mutex mtx_;
 };
 
 } // namespace network
