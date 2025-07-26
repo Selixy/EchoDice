@@ -26,8 +26,12 @@ API_Cpp void createOffer() {
 API_Cpp void network_ConectTo(const char* remote_sdp) {
     if (!remote_sdp) return;
 
-    std::string decoded_sdp = network::decode_sdp(remote_sdp);  // ✅ ici on décode
-    network::connect_to_offer(g_peerManager, "peer2", decoded_sdp);
+    try {
+        std::string decoded = network::decode_sdp(remote_sdp);
+        network::connect_to_offer(g_peerManager, "peer2", decoded);
+    } catch (const std::exception& e) {
+        std::cerr << "[network] Échec dans network_ConectTo : " << e.what() << "\n";
+    }
 }
 
 } // extern "C"
