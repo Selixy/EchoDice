@@ -62,8 +62,8 @@ if errorlevel 1 (
 
 echo.
 echo [4/6] Copying C++ DLLs and LIBs to output
-copy /Y "%BUILD_CPP_DIR%\API_Network.dll" "%OUTPUT_DIR%\" || echo Warning: failed to copy API_Network.dll
-copy /Y "%BUILD_CPP_DIR%\API_Network.lib" "%OUTPUT_DIR%\echodice_api.lib" || echo Warning: failed to copy API_Network.lib
+copy /Y "%BUILD_CPP_DIR%\echodice_api.dll" "%OUTPUT_DIR%\" || echo Warning: failed to copy echodice_api.dll
+copy /Y "%BUILD_CPP_DIR%\echodice_api.lib" "%OUTPUT_DIR%\echodice_api.lib" || echo Warning: failed to copy echodice_api.lib
 copy /Y "%ROOT_DIR%\lib\cpp\vcpkg\installed\x64-windows\bin\*.dll" "%OUTPUT_DIR%\" || echo Warning: failed to copy runtime DLLs
 
 echo.

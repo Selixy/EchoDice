@@ -1,5 +1,3 @@
-// src/cli/loop_cli.rs
-
 use crate::api::command::CommandDesc;
 use inventory;
 use std::{
@@ -12,23 +10,17 @@ use std::{
     time::Duration,
 };
 
-/// Flag global pour contrôler la boucle CLI
 pub static RUNNING: AtomicBool = AtomicBool::new(true);
+pub fn stop_cli() { RUNNING.store(false, Ordering::SeqCst); }
 
-/// Fonction à appeler pour demander l'arrêt de la boucle CLI
-pub fn stop_cli() {
-    RUNNING.store(false, Ordering::SeqCst);
-}
-
-/// Lance la boucle REPL en auto-découvrant toutes les commandes
 pub fn run_cli() {
-    // 1) Charger toutes les CommandDesc déposées (API + CLI)
+    // Charge toutes les CommandDesc
     let mut commands = std::collections::HashMap::new();
     for cmd in inventory::iter::<CommandDesc> {
         commands.insert(cmd.name, cmd);
     }
 
-    // 2) Thread de lecture stdin
+    // Thread de lecture stdin
     let (tx, rx) = mpsc::channel::<String>();
     thread::spawn(move || {
         for line in io::stdin().lock().lines().flatten() {
@@ -36,22 +28,38 @@ pub fn run_cli() {
         }
     });
 
-    println!("Tapez une commande (par ex. `help` ou `stop`).");
+    println!("Tapez une commande (tapez \"help\" pour visualiser la liste).");
 
-    // 3) Boucle principale
     while RUNNING.load(Ordering::SeqCst) {
-        // traiter les commandes en file
         while let Ok(line) = rx.try_recv() {
             let key = line.trim();
-            if let Some(cmd) = commands.get(key) {
-                // affiche le message puis exécute
-                println!("{}", cmd.message);
-                (cmd.callback)();
-            } else {
+
+            // On cherche un match exact ou un préfixe "name/param"
+            let mut handled = false;
+            for (name, cmd) in &commands {
+                if key == *name {
+                    // commande sans param
+                    println!("{}", cmd.message);
+                    (cmd.callback)(None);
+                    handled = true;
+                    break;
+                }
+                // si la saisie commence par "name/"
+                let prefix = format!("{}/", name);
+                if key.starts_with(&prefix) {
+                    let param = &key[prefix.len()..];
+                    println!("{}", cmd.message);
+                    (cmd.callback)(Some(param));
+                    handled = true;
+                    break;
+                }
+            }
+
+            if !handled {
                 println!("Commande inconnue : `{}` (tapez `help`)", key);
             }
         }
-        // pause légère pour ne pas monopoliser le CPU
+
         thread::sleep(Duration::from_millis(40));
     }
 }
