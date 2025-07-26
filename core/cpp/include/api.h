@@ -1,3 +1,4 @@
+// include/network/api.h
 #pragma once
 
 #ifdef _WIN32
@@ -11,8 +12,7 @@
 #endif
 
 extern "C" {
-
-API_Cpp void network_Init();
-API_Cpp void network_Shutdown();
-
-} // extern "C"
+  API_Cpp void    network_Init();
+  API_Cpp void    network_Shutdown();
+  API_Cpp void    network_ConectTo(const char* remote_sdp);
+}

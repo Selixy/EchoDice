@@ -1,15 +1,19 @@
 #pragma once
+#include <string>
 
 namespace network {
 
-/// Initialise tout ce qu’il faut pour le subsystem réseau.
-/// Appelle une seule fois au démarrage.
+/// Initialise WebRTC et crée l’offer (imprimée et stockée).
 void init();
 
-/// Exécuté à chaque tick de la boucle Rust.
-void tick();
-
-/// Détruit / nettoie les ressources réseau.
+/// Ferme proprement la PeerConnection.
 void shutdown();
+
+/// Applique l’offre SDP reçue, génère l’answer SDP
+/// (imprimée et stockée) et renvoie une référence vers la chaîne.
+const std::string& connectTo(const std::string& remoteSdp);
+
+/// Renvoie la dernière SDP générée (offer ou answer).
+const std::string& lastSdp();
 
 } // namespace network
