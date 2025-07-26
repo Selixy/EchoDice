@@ -30,7 +30,7 @@ API_Cpp void network_ConectTo(const char* remote_sdp) {
         std::string decoded = network::decode_sdp(remote_sdp);
         network::connect_to_offer(g_peerManager, "peer2", decoded);
     } catch (const std::exception& e) {
-        std::cerr << "[network] Échec dans network_ConectTo : " << e.what() << "\n";
+        std::cerr << "[network] Echec dans network_ConectTo : " << e.what() << "\n";
     }
 }
 

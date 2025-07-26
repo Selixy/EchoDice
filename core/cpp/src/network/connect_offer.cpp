@@ -13,7 +13,6 @@ void connect_to_offer(PeerManager& manager, const std::string& id, const std::st
                   << std::string(desc) << "\n====================\n";
     });
 
-    pc->createDataChannel("data");
     manager.insert(id, pc);
 
     pc->setRemoteDescription(rtc::Description(remoteSdp));
