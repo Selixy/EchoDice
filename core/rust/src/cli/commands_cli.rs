@@ -1,10 +1,10 @@
 // src/cli/commands_cli.rs
 
 use crate::api::command::CommandDesc;
-use crate::cli::loop_cli::{stop_cli, RUNNING};
+use crate::cli::loop_cli::stop_cli;
 use inventory;
 
-/// Callback pour afficher la liste des commandes
+// Callback pour afficher la liste des commandes
 fn help() {
     println!("[CLI] Commandes disponibles :");
     // on itère directement sur l’inventaire
@@ -13,7 +13,7 @@ fn help() {
     }
 }
 
-/// Enregistre la commande "help"
+// Enregistre la commande "help"
 inventory::submit! {
     CommandDesc {
         name:        "help",
@@ -23,7 +23,7 @@ inventory::submit! {
     }
 }
 
-/// Enregistre la commande "stop" pour quitter la boucle
+// Enregistre la commande "stop" pour quitter la boucle
 inventory::submit! {
     CommandDesc {
         name:        "stop",

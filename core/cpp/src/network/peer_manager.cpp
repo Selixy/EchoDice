@@ -6,18 +6,35 @@ void PeerManager::insert(const std::string& id,
                          std::shared_ptr<rtc::PeerConnection> pc) {
     // 1) On s'abonne aux changements d'état de la PeerConnection
     pc->onStateChange([this, id](rtc::PeerConnection::State state) {
-        // Dès que l'état devient terminal, on supprime le peer
-        if (state == rtc::PeerConnection::State::Disconnected ||
-            state == rtc::PeerConnection::State::Failed       ||
-            state == rtc::PeerConnection::State::Closed) {
-            
-            std::lock_guard<std::mutex> lock(mtx_);
-            peers_.erase(id);
-            std::cout << "[network] Peer '" << id 
-                      << "' removed (state=" << state << ")\n";
+        switch (state) {
+            case rtc::PeerConnection::State::New:
+                // optionnel : juste créé
+                break;
+
+            case rtc::PeerConnection::State::Connecting:
+                std::cout << "[network] Peer '" << id << "' is connecting…\n";
+                break;
+
+            case rtc::PeerConnection::State::Connected:
+                // ← **Connexion établie !**
+                std::cout << "[network] Peer '" << id 
+                          << "' is now CONNECTED\n";
+                break;
+
+            case rtc::PeerConnection::State::Disconnected:
+            case rtc::PeerConnection::State::Failed:
+            case rtc::PeerConnection::State::Closed:
+                {
+                    std::lock_guard<std::mutex> lock(mtx_);
+                    peers_.erase(id);
+                }
+                std::cout << "[network] Peer '" << id 
+                          << "' removed (state=" << state << ")\n";
+                break;
         }
     });
 
+    // 2) On stocke la PeerConnection dans la map
     {
         std::lock_guard<std::mutex> lock(mtx_);
         peers_[id] = std::move(pc);

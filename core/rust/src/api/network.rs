@@ -14,7 +14,7 @@ pub fn shutdown() {
 }
 
 pub fn GetCode() {
-    unsafe { bindings::createOffer() }
+    unsafe { bindings::network_GetCode() }
 }
 
 pub fn connect_to(offer_sdp: &str) {

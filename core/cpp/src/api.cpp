@@ -1,6 +1,7 @@
 // core/cpp/src/api.cpp
 
 #include "api.h"
+#include "info.hpp"
 #include "network/peer_manager.hpp"
 #include "network/create_offer.hpp"
 #include "network/connect_offer.hpp"
@@ -8,17 +9,17 @@
 
 #include <string>
 
-static network::PeerManager g_peerManager; // ✅ Ajout nécessaire
+static network::PeerManager g_peerManager;
 
 extern "C" {
 
 /// Ferme proprement la PeerConnection
 API_Cpp void network_Shutdown() {
-    g_peerManager.clear();  // ✅ nettoie tous les PeerConnection
+    g_peerManager.clear();
 }
 
 /// génère une OFFER SDP
-API_Cpp void createOffer() {
+API_Cpp void network_GetCode() {
     network::create_offer(g_peerManager, "peer1");
 }
 
@@ -31,6 +32,13 @@ API_Cpp void network_ConectTo(const char* remote_sdp) {
         network::connect_to_offer(g_peerManager, "peer2", decoded);
     } catch (const std::exception& e) {
         std::cerr << "[network] Echec dans network_ConectTo : " << e.what() << "\n";
+    }
+}
+
+/// Defini l'ID
+API_Cpp void Set_ID(const char* id) {
+    if (id) {
+        gInfo.ID = std::string(id);
     }
 }
 
