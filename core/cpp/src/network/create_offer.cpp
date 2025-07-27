@@ -7,7 +7,7 @@
 
 namespace network {
 
-void create_offer(PeerManager& manager, const std::string& id) {
+void create_offer(PeerManager& manager) {
     auto pc = std::make_shared<rtc::PeerConnection>();
     const std::string id = gInfo.ID;
 

@@ -2,10 +2,12 @@
 
 #include "api.h"
 #include "info.hpp"
+#include "network/connect_offer.hpp"
 #include "network/peer_manager.hpp"
 #include "network/create_offer.hpp"
-#include "network/connect_offer.hpp"
+#include "network/send_message.hpp"
 #include "network/sdp_codec.hpp"
+#include "network/global.hpp"  
 
 #include <string>
 
@@ -20,7 +22,7 @@ API_Cpp void network_Shutdown() {
 
 /// génère une OFFER SDP
 API_Cpp void network_GetCode() {
-    network::create_offer(g_peerManager, "peer1");
+    network::create_offer(g_peerManager);
 }
 
 /// Applique une OFFER SDP reçue et génère une ANSWER SDP
@@ -29,10 +31,19 @@ API_Cpp void network_ConectTo(const char* remote_sdp) {
 
     try {
         std::string decoded = network::decode_sdp(remote_sdp);
-        network::connect_to_offer(g_peerManager, "peer2", decoded);
+        network::connect_to_offer(g_peerManager, decoded);
     } catch (const std::exception& e) {
         std::cerr << "[network] Echec dans network_ConectTo : " << e.what() << "\n";
     }
+}
+
+API_Cpp bool network_SendMessage(const char* peer_id,
+                                 const char* message)
+{
+    if (!peer_id || !message) return false;
+    return network::send_message(network::gPeerManager,
+                                 peer_id,
+                                 message);
 }
 
 /// Defini l'ID
