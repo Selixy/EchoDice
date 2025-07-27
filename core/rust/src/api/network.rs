@@ -25,6 +25,14 @@ pub fn connect_to(offer_sdp: &str) {
     }
 }
 
+pub fn send_message(peer_id: &str, msg: &str) -> bool {
+    let c_peer = CString::new(peer_id)
+        .expect("peer_id contient un NUL byte");
+    let c_msg  = CString::new(msg)
+        .expect("message contient un NUL byte");
+    unsafe { bindings::network_SendMessage(c_peer.as_ptr(), c_msg.as_ptr()) }
+}
+
 
 inventory::submit! {
     CommandDesc {
@@ -54,6 +62,28 @@ inventory::submit! {
                 connect_to(sdp);
             } else {
                 eprintln!("network/connectTo attend un paramètre SDP");
+            }
+        },
+    }
+}
+
+inventory::submit! {
+    CommandDesc {
+        name:        "network/sendMessage",
+        description: "envoyer un message au pair donné",
+        message:     "[network] message envoyé",
+        callback:    |opt| {
+            if let Some(args) = opt {
+                // Sépare peerId et payload (premier mot = ID, le reste = msg)
+                if let Some((id, msg)) = args.split_once(' ') {
+                    if !send_message(id, msg) {
+                        eprintln!("[network] échec d'envoi (peer inconnu ?)");
+                    }
+                } else {
+                    eprintln!("Usage : network/sendMessage <peerId> <message>");
+                }
+            } else {
+                eprintln!("network/sendMessage attend deux paramètres");
             }
         },
     }
