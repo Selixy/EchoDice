@@ -64,13 +64,26 @@ std::string encode_sdp(const std::string& sdp) {
     return base64_encode(compressed.data(), compressed_size);
 }
 
-std::string decode_sdp(const std::string& encoded) {
+std::string decode_sdp(const std::string& encoded)
+{
     auto compressed = base64_decode(encoded);
-    std::vector<char> out(65536); // taille max SDP décompressé
-    uLongf out_size = out.size();
-    if (uncompress(reinterpret_cast<Bytef*>(out.data()), &out_size,
-                   compressed.data(), compressed.size()) != Z_OK) {
-        throw std::runtime_error("decompression failed");
+
+    uLongf out_size = 65536;
+    std::vector<char> out(out_size);
+
+    int zres = uncompress(reinterpret_cast<Bytef*>(out.data()), &out_size,
+                          compressed.data(), compressed.size());
+
+    for (int i = 0; zres == Z_BUF_ERROR && i < 4; ++i) {
+        out_size *= 2;
+        out.resize(out_size);
+        zres = uncompress(reinterpret_cast<Bytef*>(out.data()), &out_size,
+                          compressed.data(), compressed.size());
+    }
+
+    if (zres != Z_OK) {
+        throw std::runtime_error("decompression failed (zlib code "
+                                 + std::to_string(zres) + ")");
     }
     return std::string(out.data(), out_size);
 }
