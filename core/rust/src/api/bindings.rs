@@ -8,6 +8,8 @@ extern "C" {
     pub fn network_ConectTo(remote_sdp: *const c_char);
     pub fn network_SendMessage(peer_id: *const c_char,
                                message:   *const c_char) -> bool;
+    pub fn network_SetOnMessage(cb: extern "C" fn(peer_id: *const c_char,
+                                                 message: *const c_char));
 
     pub fn Set_ID(id: *const c_char);
 }
