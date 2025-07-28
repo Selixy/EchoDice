@@ -65,16 +65,31 @@ API_Cpp void network_Shutdown() {
     g_peerManager.Close();
 }
 
-/// Enregistre un callback (peer_id, message) à appeler à chaque réception
+/// Enregistre un callback pour remonter les messages reçus
 API_Cpp void network_SetOnMessage(void (*cb)(const char* peer_id,
                                              const char* message))
 {
     std::lock_guard<std::mutex> lock(g_cb_mutex);
     g_message_cb = cb;
 
-    // (Re)register auprès de PeerManager
+    // On (re)branche notre logique de réception
     g_peerManager.onMessage(
         [](const std::string& from, const std::string& payload) {
+            // 1) Tentative de décodage JSON/Base64
+            try {
+                auto j = signaling::decode(payload);
+                // Si on a bien un « sdp », on traite comme réponse SDP
+                if (j.contains("sdp")) {
+                    auto sdp = j.at("sdp").get<std::string>();
+                    std::cout << "[api] Applying final ANSWER from " << from << "\n";
+                    g_peerManager.SetRemoteDescription("answer", sdp);
+                    return; // on n’appelle pas le callback Rust
+                }
+            } catch (...) {
+                // payload n'était pas un JSON Base64 valide → c'est un chat normal
+            }
+
+            // 2) C'est un message "chat" : on le transmet à Rust
             std::lock_guard<std::mutex> lock(g_cb_mutex);
             if (g_message_cb) {
                 g_message_cb(from.c_str(), payload.c_str());
@@ -82,5 +97,6 @@ API_Cpp void network_SetOnMessage(void (*cb)(const char* peer_id,
         }
     );
 }
+
 
 } // extern "C"
