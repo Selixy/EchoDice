@@ -74,8 +74,12 @@ inventory::submit! {
         message:     "[network] message envoyé",
         callback:    |opt| {
             if let Some(args) = opt {
-                // Sépare peerId et payload (premier mot = ID, le reste = msg)
-                if let Some((id, msg)) = args.split_once(' ') {
+                // On tente d'abord de splitter sur l'espace, puis sur le slash
+                let maybe = args
+                    .split_once(' ')
+                    .or_else(|| args.split_once('/'));
+
+                if let Some((id, msg)) = maybe {
                     if !send_message(id, msg) {
                         eprintln!("[network] échec d'envoi (peer inconnu ?)");
                     }
