@@ -1,4 +1,4 @@
-#include "api.h"                  // <— inchangé !
+#include "api.h"
 #include "info.hpp"
 
 #include "network/OfferManager.hpp"
@@ -34,15 +34,22 @@ API_Cpp void network_ConectTo(const char* remote_sdp) {
         std::cerr << "[Error] ID not set. Call Set_ID() first.\n";
         return;
     }
-    // Décodage pour extraire remoteId
+
+    // 1) On décode la structure JSON/Base64 pour extraire l'ID du pair distant
     json j = signaling::decode(remote_sdp);
     std::string remoteId = j.at("id").get<std::string>();
 
+    // 2) On crée l'ANSWER encodé
     auto answerCode = signaling::connectToPeer(
-        g_peerManager, gInfo.ID, remote_sdp);
+        g_peerManager, gInfo.ID, remote_sdp
+    );
 
-    g_peerManager.SendMessage(remoteId.c_str(), answerCode.c_str());
-    std::cout << "[Answer to send] " << answerCode << std::endl;
+    // 3) On envoie immédiatement la réponse sur le DataChannel
+    bool ok = g_peerManager.SendMessage(remoteId.c_str(), answerCode.c_str());
+    if (!ok) {
+        std::cerr << "[Error] Failed to send answer to peer " 
+                  << remoteId << std::endl;
+    }
 }
 
 API_Cpp bool network_SendMessage(const char* peer_id,
