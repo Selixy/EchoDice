@@ -17,7 +17,6 @@ void connect_to_offer(PeerManager& manager,
 
     // 2) Hook sur tout DataChannel entrant
     pc->onDataChannel([&manager, tempId](auto incoming) {
-        // Si c'est le canal "meta" : échange d'IDs
         if (incoming->label() == "meta") {
             // à l'ouverture, on renvoie NOTRE ID
             incoming->onOpen([incoming] {
@@ -27,8 +26,8 @@ void connect_to_offer(PeerManager& manager,
             incoming->onMessage([&manager, tempId](auto data) {
                 if (auto txt = std::get_if<std::string>(&data)) {
                     manager.rename(tempId, *txt);
-                    std::cout << "[network] renommé tempId '" << tempId
-                              << "' → '" << *txt << "'\n";
+                    std::cout << "[network] renommé tempId '"
+                              << tempId << "' → '" << *txt << "'\n";
                 }
             });
         }
@@ -43,7 +42,10 @@ void connect_to_offer(PeerManager& manager,
     // 4) Stockage sous clé temporaire
     manager.insert(tempId, pc);
 
-    // 5) Applique l’offre reçue et génère la réponse
+    // 5) **CRÉATION DU CANAL "meta"** pour démarrer l’échange d’ID
+    pc->createDataChannel("meta");
+
+    // 6) Applique l’offre reçue et génère la réponse
     pc->setRemoteDescription(rtc::Description{plainSdp});
     pc->setLocalDescription();
 }
