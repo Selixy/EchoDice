@@ -35,21 +35,17 @@ API_Cpp void network_ConectTo(const char* remote_sdp) {
         return;
     }
 
-    // 1) On décode la structure JSON/Base64 pour extraire l'ID du pair distant
+    // 1) Décoder pour extraire remoteId
     json j = signaling::decode(remote_sdp);
     std::string remoteId = j.at("id").get<std::string>();
 
-    // 2) On crée l'ANSWER encodé
+    // 2) Générer l’ANSWER encodé
     auto answerCode = signaling::connectToPeer(
         g_peerManager, gInfo.ID, remote_sdp
     );
 
-    // 3) On envoie immédiatement la réponse sur le DataChannel
-    bool ok = g_peerManager.SendMessage(remoteId.c_str(), answerCode.c_str());
-    if (!ok) {
-        std::cerr << "[Error] Failed to send answer to peer " 
-                  << remoteId << std::endl;
-    }
+    // 3) Envoyer automatiquement dès que le channel sera prêt
+    g_peerManager.SendWhenReady(answerCode);
 }
 
 API_Cpp bool network_SendMessage(const char* peer_id,

@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include "network/SignalCodec.hpp"
-#include "network/PeerManager.hpp"   // votre PeerManager
+#include "network/PeerManager.hpp"
 
 namespace signaling {
 
