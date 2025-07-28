@@ -7,19 +7,19 @@
 
 #include <iostream>
 #include <mutex>
+
 using nlohmann::json;
 
-// Ton PeerManager partagé
 static network::PeerManager g_peerManager;
-
-// Callback stocké + mutex pour la sécurité thread
 static std::mutex g_cb_mutex;
 static void (*g_message_cb)(const char* peer_id, const char* message) = nullptr;
 
 extern "C" {
 
 API_Cpp void Set_ID(const char* id) {
-    if (id) gInfo.ID = id;
+    if (id) {
+        gInfo.ID = id;
+    }
 }
 
 API_Cpp void network_GetCode() {
@@ -41,16 +41,17 @@ API_Cpp void network_ConectTo(const char* remote_sdp) {
         return;
     }
 
-    // 1) Décoder pour extraire remoteId
+    // 1) Décoder pour extraire remoteId (non utilisé ici mais pour debug)
     json j = signaling::decode(remote_sdp);
     std::string remoteId = j.at("id").get<std::string>();
+    std::cout << "[api] connectToPeer for remoteId = " << remoteId << "\n";
 
     // 2) Générer l’ANSWER encodé
     auto answerCode = signaling::connectToPeer(
         g_peerManager, gInfo.ID, remote_sdp
     );
 
-    // 3) Envoyer dès que le DataChannel est prêt
+    // 3) Envoyer dès que le DataChannel sera prêt (ou stocker en attendant)
     g_peerManager.SendWhenReady(answerCode);
 }
 
@@ -65,31 +66,31 @@ API_Cpp void network_Shutdown() {
     g_peerManager.Close();
 }
 
-/// Enregistre un callback pour remonter les messages reçus
+/// Enregistre un callback Rust pour les messages reçus.
+/// Applique automatiquement l’ANSWER (JSON Base64) avant d’appeler le callback.
 API_Cpp void network_SetOnMessage(void (*cb)(const char* peer_id,
                                              const char* message))
 {
     std::lock_guard<std::mutex> lock(g_cb_mutex);
     g_message_cb = cb;
 
-    // On (re)branche notre logique de réception
+    // (Re)branche la réception
     g_peerManager.onMessage(
         [](const std::string& from, const std::string& payload) {
-            // 1) Tentative de décodage JSON/Base64
+            // Tenter de décoder comme JSON/Base64 {id,sdp}
             try {
                 auto j = signaling::decode(payload);
-                // Si on a bien un « sdp », on traite comme réponse SDP
                 if (j.contains("sdp")) {
                     auto sdp = j.at("sdp").get<std::string>();
                     std::cout << "[api] Applying final ANSWER from " << from << "\n";
                     g_peerManager.SetRemoteDescription("answer", sdp);
-                    return; // on n’appelle pas le callback Rust
+                    return; // on n’appelle pas le callback Rust pour un SDP
                 }
             } catch (...) {
-                // payload n'était pas un JSON Base64 valide → c'est un chat normal
+                // ce n’était pas un SDP encodé → on traite comme message chat
             }
 
-            // 2) C'est un message "chat" : on le transmet à Rust
+            // C’est un message “chat” normal : on l’envoie à Rust
             std::lock_guard<std::mutex> lock(g_cb_mutex);
             if (g_message_cb) {
                 g_message_cb(from.c_str(), payload.c_str());
@@ -97,6 +98,5 @@ API_Cpp void network_SetOnMessage(void (*cb)(const char* peer_id,
         }
     );
 }
-
 
 } // extern "C"
