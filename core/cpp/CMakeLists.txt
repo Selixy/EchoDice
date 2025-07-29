@@ -37,14 +37,17 @@ target_include_directories(API_Cpp
 )
 
 # ─────────────────────────────────────────────────────────────
-# 4) Dépendances via vcpkg : libdatachannel + zlib
+# 4) Dépendances via vcpkg
 find_package(LibDataChannel CONFIG REQUIRED)
-find_package(ZLIB           REQUIRED)
+find_package(ZLIB                  REQUIRED)
+find_package(CURL                  REQUIRED)
+
 
 target_link_libraries(API_Cpp
     PUBLIC
       LibDataChannel::LibDataChannel
       ZLIB::ZLIB
+      CURL::libcurl
 )
 
 # ─────────────────────────────────────────────────────────────

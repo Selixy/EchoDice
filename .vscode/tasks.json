@@ -15,7 +15,7 @@
       }
     },
     {
-      "label": "Lancer en release",
+      "label": "buld et Lancer",
       "type": "process",
       "command": "cmd.exe",
       "args": ["/c", "${workspaceFolder}\\.vscode\\script\\run.bat"],
@@ -23,6 +23,19 @@
         "statusbar": {
           "label": "$(rocket) Run",
           "color": "#f76353",
+          "detail": "Compiler et lancer EchoDice"
+        }
+      }
+    },
+    {
+      "label": "clean une release",
+      "type": "process",
+      "command": "cmd.exe",
+      "args": ["/c", "${workspaceFolder}\\.vscode\\script\\build_Release.bat"],
+      "options": {
+        "statusbar": {
+          "label": "$(rocket) release",
+          "color": "#0fc715",
           "detail": "Compiler et lancer EchoDice"
         }
       }

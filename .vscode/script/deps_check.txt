@@ -1,0 +1,107 @@
+[-] Import listing for file : ..\..\build\EchoDice\echodice.exe
+Import from module echodice_api.dll :
+	 Function network_GetCode
+	 Function network_ConectTo
+	 Function network_Shutdown
+	 Function network_SendMessage
+	 Function Set_ID
+Import from module api-ms-win-core-synch-l1-2-0.dll :
+	 Function WakeByAddressAll
+	 Function WakeByAddressSingle
+	 Function WaitOnAddress
+Import from module bcryptprimitives.dll :
+	 Function ProcessPrng
+Import from module KERNEL32.dll :
+	 Function WideCharToMultiByte
+	 Function SetUnhandledExceptionFilter
+	 Function UnhandledExceptionFilter
+	 Function IsDebuggerPresent
+	 Function InitializeSListHead
+	 Function GetSystemTimeAsFileTime
+	 Function GetCurrentThreadId
+	 Function CreateMutexA
+	 Function LoadLibraryA
+	 Function WaitForSingleObjectEx
+	 Function CloseHandle
+	 Function GetStdHandle
+	 Function GetConsoleMode
+	 Function GetFileInformationByHandleEx
+	 Function GetLastError
+	 Function AddVectoredExceptionHandler
+	 Function SetThreadStackGuarantee
+	 Function GetCurrentThread
+	 Function SwitchToThread
+	 Function CreateWaitableTimerExW
+	 Function SetWaitableTimer
+	 Function WaitForSingleObject
+	 Function Sleep
+	 Function QueryPerformanceCounter
+	 Function RtlCaptureContext
+	 Function RtlLookupFunctionEntry
+	 Function RtlVirtualUnwind
+	 Function SetLastError
+	 Function GetCurrentDirectoryW
+	 Function GetEnvironmentVariableW
+	 Function GetCurrentProcess
+	 Function GetCurrentProcessId
+	 Function QueryPerformanceFrequency
+	 Function GetProcessHeap
+	 Function HeapFree
+	 Function HeapReAlloc
+	 Function lstrlenW
+	 Function ReleaseMutex
+	 Function GetModuleHandleW
+	 Function FormatMessageW
+	 Function GetConsoleOutputCP
+	 Function MultiByteToWideChar
+	 Function WriteConsoleW
+	 Function IsProcessorFeaturePresent
+	 Function ReadConsoleW
+	 Function CreateThread
+	 Function GetModuleHandleA
+	 Function GetProcAddress
+	 Function HeapAlloc
+Import from module ntdll.dll :
+	 Function RtlNtStatusToDosError
+	 Function NtWriteFile
+	 Function NtReadFile
+Import from module VCRUNTIME140.dll :
+	 Function __current_exception
+	 Function __current_exception_context
+	 Function memcmp
+	 Function memcpy
+	 Function memset
+	 Function memmove
+	 Function _CxxThrowException
+	 Function __C_specific_handler
+	 Function __CxxFrameHandler3
+Import from module api-ms-win-crt-runtime-l1-1-0.dll :
+	 Function _set_app_type
+	 Function _seh_filter_exe
+	 Function _configure_narrow_argv
+	 Function _initialize_narrow_environment
+	 Function _get_initial_narrow_environment
+	 Function _initterm
+	 Function _initterm_e
+	 Function exit
+	 Function _exit
+	 Function terminate
+	 Function __p___argv
+	 Function _cexit
+	 Function _c_exit
+	 Function _register_thread_local_exe_atexit_callback
+	 Function _crt_atexit
+	 Function _register_onexit_function
+	 Function _initialize_onexit_table
+	 Function __p___argc
+Import from module api-ms-win-crt-math-l1-1-0.dll :
+	 Function __setusermatherr
+Import from module api-ms-win-crt-stdio-l1-1-0.dll :
+	 Function _set_fmode
+	 Function __p__commode
+Import from module api-ms-win-crt-locale-l1-1-0.dll :
+	 Function _configthreadlocale
+Import from module api-ms-win-crt-heap-l1-1-0.dll :
+	 Function _set_new_mode
+	 Function free
+[-] Import listing done
