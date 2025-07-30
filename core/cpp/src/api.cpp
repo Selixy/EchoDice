@@ -1,5 +1,6 @@
 #include "api.h"
 #include "info.hpp"
+#include "Logger.hpp"
 #include "network/p2p/P2PManager.hpp"
 
 static std::string s_code;
@@ -13,6 +14,7 @@ API_Cpp void Set_ID(const char* id) {
 API_Cpp const char* network_GetCode() {
   p2p::initLocal(gInfo.ID);
   s_code = p2p::getCode();
+  LOG_DEBUG("PeerJS connecte, code genere = " + s_code);
   return s_code.c_str();
 }
 
