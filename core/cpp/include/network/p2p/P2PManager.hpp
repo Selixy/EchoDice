@@ -2,32 +2,39 @@
 
 #include <string>
 #include <functional>
+#include <unordered_map>
+#include <memory>
+#include <nlohmann/json_fwd.hpp>
+#include <rtc/peerconnection.hpp>
+#include "network/serveur/PeerJSWebSocket.hpp"
 
 namespace p2p {
 
-/// Initialise le manager P2P local avec l’ID de ce client.
+using PeerCallback    = std::function<void(const std::string& peerId)>;
+using MessageCallback = std::function<void(const std::string& peerId, const std::string& msg)>;
+
+/// Initialise le signaling (à appeler une seule fois, après Set_ID).
 void initLocal(const std::string& id);
 
-/// Génère (une seule fois) un code de room aléatoire, le retourne.
+/// Génère ou retourne le code de room.
 std::string getCode();
 
-/// Se connecte à la room identifiée par ce code (abonnement au signaling).
+/// Se connecte à la room existante (ouvre le WebSocket et envoie ROOM_JOIN).
 void connectTo(const std::string& roomCode);
 
-/// Envoie un message P2P à un pair donné.
-void sendMessage(const std::string& peerId,
-                 const std::string& message);
+/// Envoie un message de données au peer donné.
+void sendMessage(const std::string& peerId, const std::string& message);
 
-/// Détruit / ferme proprement le signaling.
+/// Ferme toutes les connexions.
 void shutdown();
 
-/// Callback appelé à chaque nouveau pair rejoint la room (avec son peerId).
-using PeerCallback    = std::function<void(const std::string& peerId)>;
+/// Callback lorsqu’un pair entre dans la room (avant négociation).
 void onPeerJoined(PeerCallback cb);
 
-/// Callback appelé à la réception d’un message P2P (src → message).
-using MessageCallback = std::function<void(const std::string& src,
-                                           const std::string& message)>;
+/// Callback lorsqu’un pair quitte la room.
+void onPeerLeft(PeerCallback cb);
+
+/// Callback lorsqu’un message de données est reçu.
 void onMessageReceived(MessageCallback cb);
 
-} // namespace p2p
+}
