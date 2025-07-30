@@ -14,7 +14,7 @@ static size_t WriteCallback(void* contents,
       ->append(static_cast<char*>(contents), total);
     return total;
 }
-} // namespace
+} // anonymous
 
 namespace PeerJS {
 
@@ -27,14 +27,15 @@ std::string generatePeerId(const std::string& host,
     url << (secure ? "https://" : "http://")
         << host << ":" << port
         << "/peerjs/id?key=peerjs";
+
     CURL* curl = curl_easy_init();
     if (!curl) throw std::runtime_error("Impossible d'initialiser CURL");
 
     std::string response;
-    curl_easy_setopt(curl, CURLOPT_URL, url.str().c_str());
+    curl_easy_setopt(curl, CURLOPT_URL,           url.str().c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeoutS);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,     &response);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT,       timeoutS);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
     CURLcode res = curl_easy_perform(curl);
@@ -43,16 +44,19 @@ std::string generatePeerId(const std::string& host,
         curl_easy_cleanup(curl);
         throw std::runtime_error("Requête HTTP échouée: " + err);
     }
+
     long code = 0;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
     curl_easy_cleanup(curl);
-    if (code != 200) {
+
+    if (code != 200)
         throw std::runtime_error("HTTP " + std::to_string(code));
-    }
-    // enlever un éventuel '\n'
+
+    // Supprime \n ou \r final si présent
     if (!response.empty() &&
-        (response.back() == '\n' || response.back() == '\r'))
+       (response.back() == '\n' || response.back() == '\r'))
         response.pop_back();
+
     return response;
 }
 

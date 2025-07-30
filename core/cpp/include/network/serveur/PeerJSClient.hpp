@@ -11,6 +11,6 @@ namespace PeerJS {
 std::string generatePeerId(const std::string& host,
                            int port,
                            bool secure,
-                           long timeoutS = 10);
+                           long timeoutS = 5);
 
 } // namespace PeerJS
