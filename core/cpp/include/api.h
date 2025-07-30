@@ -1,24 +1,24 @@
 #pragma once
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#if defined(STATIC_API)
-    #define API_Cpp
-#elif defined(API_Cpp_EXPORTS)
-    #define API_Cpp __declspec(dllexport)
+#ifdef API_Cpp_EXPORTS
+# define API_Cpp __declspec(dllexport)
 #else
-    #define API_Cpp __declspec(dllimport)  // ← cette ligne cause l’erreur si STATIC_API n’est pas défini
+# define API_Cpp __declspec(dllimport)
 #endif
 
-API_Cpp void network_Shutdown();
-API_Cpp void network_GetCode();
-API_Cpp void network_ConectTo(const char* remote_sdp);
-API_Cpp bool network_SendMessage(const char* peer_id, const char* message);
+extern "C" {
+    /// (Optionnel) fixe un ID avant GetCode()
+    API_Cpp void Set_ID(const char* id);
 
-API_Cpp void Set_ID(const char* id);
+    /// Génère un connection code (appelle l’API PeerJS HTTP) 
+    /// et rejoint la room associée à ce code
+    API_Cpp const char* network_GetCode();
 
-#ifdef __cplusplus
+    /// Rejoint la même room que network_GetCode (broadcast OFFER)
+    API_Cpp void network_ConnectTo(const char* connection_code);
+
+    /// Envoie un message texte sur la DataChannel P2P
+    API_Cpp bool network_SendMessage(const char* peer_id, const char* message);
+
+    /// Arrête proprement le sous-système P2P
+    API_Cpp void network_Shutdown();
 }
-#endif

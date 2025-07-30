@@ -21,7 +21,7 @@ pub fn connect_to(offer_sdp: &str) {
     let c_offer: CString = CString::new(offer_sdp)
     .expect("Impossible de convertir l’offer en CString");
     unsafe {
-        bindings::network_ConectTo(c_offer.as_ptr() as *const c_char);
+        bindings::network_ConnectTo(c_offer.as_ptr() as *const c_char);
     }
 }
 

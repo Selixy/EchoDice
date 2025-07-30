@@ -1,7 +1,7 @@
 [-] Import listing for file : ..\..\build\EchoDice\echodice.exe
 Import from module echodice_api.dll :
 	 Function network_GetCode
-	 Function network_ConectTo
+	 Function network_ConnectTo
 	 Function network_Shutdown
 	 Function network_SendMessage
 	 Function Set_ID
