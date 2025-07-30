@@ -1,11 +1,10 @@
-// core/cpp/src/network/p2p/P2PManager.cpp
+// src/network/p2p/P2PManager.cpp
 
 #include "network/p2p/P2PManager.hpp"
 #include "network/serveur/PeerJSWebSocket.hpp"
+#include "Logger.hpp"               // pour LOG_INFO, LOG_WARN…
 #include <nlohmann/json.hpp>
 #include <random>
-#include <iostream>
-#include <vector>
 
 using json = nlohmann::json;
 
@@ -14,98 +13,103 @@ namespace p2p {
 static std::unique_ptr<PeerJS::PeerJSWebSocket> signal;
 static std::string localId;
 static std::string roomCode;
-static bool wsOpen = false;
-static std::vector<std::pair<std::string, std::string>> pendingMessages;
-static PeerCallback peerJoinedCb;
+
+static PeerCallback    peerJoinedCb;
 static MessageCallback messageCb;
 
-/// Génère un code aléatoire de 8 caractères.
+/// Génère un code de room aléatoire (8 caractères alphanumériques).
 static std::string generateRoomCode() {
-    static const char alpha[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    static const char alpha[] = "ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789abcdefghijklmnpqrstuvwxyz0123456789";
     static std::mt19937_64 rng{std::random_device{}()};
     std::uniform_int_distribution<> dist(0, sizeof(alpha) - 2);
+    constexpr int CODE_LEN = 8;
     std::string code;
-    code.reserve(8);
-    for (int i = 0; i < 8; ++i) code += alpha[dist(rng)];
+    code.reserve(CODE_LEN);
+    for (int i = 0; i < CODE_LEN; ++i) {
+        code += alpha[dist(rng)];
+    }
     return code;
 }
 
+/// Initialise uniquement le WebSocket et les handlers de messages.
 void initLocal(const std::string& id) {
     localId = id;
     signal = std::make_unique<PeerJS::PeerJSWebSocket>(
         "0.peerjs.com", 443, "peerjs", localId, "auto"
     );
 
-    // Quand la WS s'ouvre…
-    signal->setOnOpen([&]() {
-        wsOpen = true;
-        std::cout << "[INFO] WebSocket ouverte\n";
-        // Rejoindre la room si déjà défini
-        if (!roomCode.empty()) {
-            json j; j["room"] = roomCode; j["id"] = localId;
-            signal->send("ROOM_JOIN", "", j.dump());
-            std::cout << "[INFO] Enregistrement dans la room " << roomCode << "\n";
-        }
-        // Vider le tampon
-        for (auto& [peer,msg] : pendingMessages) {
-            json m; m["message"] = msg;
-            signal->send("MESSAGE", peer, m.dump());
-            std::cout << "[INFO] Envoi différé vers " << peer
-                      << " : " << msg << "\n";
-        }
-        pendingMessages.clear();
-    });
-
-    // Message signalisation entrant
     signal->setOnMessage([](const std::string& type,
                             const std::string& src,
                             const std::string& payload)
     {
-        if (type == "ROOM_JOIN" && src != localId && peerJoinedCb) {
-            std::cout << "[INFO] Peer rejoint : " << src << "\n";
-            peerJoinedCb(src);
+        if (type == "ROOM_JOIN") {
+            if (src != localId && peerJoinedCb) {
+                peerJoinedCb(src);
+            }
         }
-        else if (type == "MESSAGE" && messageCb) {
-            auto j = json::parse(payload);
-            auto txt = j.value("message", std::string{});
-            std::cout << "[INFO] Message reçu de " << src
-                      << " : " << txt << "\n";
-            messageCb(src, txt);
+        else if (type == "MESSAGE") {
+            if (messageCb) {
+                auto j = json::parse(payload);
+                messageCb(src, j.value("message", std::string{}));
+            }
         }
     });
 }
 
+/// Retourne le code de room *ET* s’y inscrit immédiatement.
 std::string getCode() {
-    if (roomCode.empty())
+    if (roomCode.empty()) {
         roomCode = generateRoomCode();
+        LOG_INFO("Room créée, code = " + roomCode);
+
+        if (!signal) {
+            initLocal(localId);
+        }
+
+        // Dès l’ouverture de la socket, on s’y enregistre
+        signal->setOnOpen([&]() {
+            LOG_INFO("WebSocket ouverte");
+            LOG_INFO("Enregistrement dans la room " + roomCode);
+            json j;
+            j["room"] = roomCode;
+            j["id"]   = localId;
+            signal->send("ROOM_JOIN", /*dst=*/"", j.dump());
+        });
+
+        signal->connect();
+    }
+
     return roomCode;
 }
 
+/// Se connecte explicitement à une room existante (utile si tu veux
+/// rejoindre après coup une room dont tu as déjà le code).
 void connectTo(const std::string& code) {
     roomCode = code;
-    if (!signal) initLocal(localId);
+    if (!signal) {
+        initLocal(localId);
+    }
+    signal->setOnOpen([&]() {
+        LOG_INFO("WebSocket ouverte");
+        LOG_INFO("Enregistrement dans la room " + roomCode);
+        json j;
+        j["room"] = roomCode;
+        j["id"]   = localId;
+        signal->send("ROOM_JOIN", "", j.dump());
+    });
     signal->connect();
 }
 
 void sendMessage(const std::string& peerId,
                  const std::string& message)
 {
-    if (!wsOpen) {
-        std::cout << "[WARN] WS pas ouverte, bufferisation du message\n";
-        pendingMessages.emplace_back(peerId, message);
-        return;
-    }
-    json j; j["message"] = message;
+    json j;
+    j["message"] = message;
     signal->send("MESSAGE", peerId, j.dump());
-    std::cout << "[INFO] Envoi de message à " << peerId
-              << " : " << message << "\n";
 }
 
 void shutdown() {
-    if (signal) signal.reset();
-    wsOpen = false;
-    pendingMessages.clear();
-    std::cout << "[INFO] Sous-système P2P arrêté\n";
+    signal.reset();
 }
 
 void onPeerJoined(PeerCallback cb) {
