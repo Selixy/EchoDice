@@ -1,11 +1,10 @@
 // core/cpp/src/network/RoomManager.cpp
 
 #include "network/RoomManager.hpp"
-#include "network/PeerJSClient.hpp"
 #include "Logger.hpp"
 #include <nlohmann/json.hpp>
 #include <random>
-#include <vector>  // pour std::vector
+#include <vector>
 
 using json = nlohmann::json;
 static constexpr int CODE_LEN = 8;
@@ -28,9 +27,21 @@ void RoomManager::setupPeerManager() {
         }
     );
 
-    // Si besoin, branche tes callbacks DataChannel :
-    // peerMgr_->onDataChannelOpen(...);
-    // peerMgr_->onDataChannelMessage(...);
+    // Callback quand le DataChannel s'ouvre
+    peerMgr_->onDataChannelOpen(
+      [this](const std::string& peerId,
+             std::shared_ptr<rtc::DataChannel> dc)
+      {
+          LOG_INFO("DataChannel opened with " + peerId);
+      });
+
+    // Callback quand un message arrive sur le DataChannel
+    peerMgr_->onDataChannelMessage(
+      [this](const std::string& peerId,
+             const std::string& msg)
+      {
+          LOG_INFO("P2P message from " + peerId + ": " + msg);
+      });
 }
 
 std::string RoomManager::generateRoomCode() {
