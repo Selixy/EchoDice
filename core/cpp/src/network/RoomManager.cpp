@@ -1,12 +1,13 @@
 // core/cpp/src/network/RoomManager.cpp
 
 #include "network/RoomManager.hpp"
+#include "network/PeerJSClient.hpp"
 #include "Logger.hpp"
 #include <nlohmann/json.hpp>
 #include <random>
+#include <vector>  // pour std::vector
 
 using json = nlohmann::json;
-
 static constexpr int CODE_LEN = 8;
 
 RoomManager::RoomManager(const std::string& localId)
@@ -18,7 +19,7 @@ RoomManager::RoomManager(const std::string& localId)
 void RoomManager::setupPeerManager() {
     peerMgr_ = std::make_unique<PeerManager>(
         [this](const std::string& type,
-               const std::string& dst,;   
+               const std::string& dst,
                const std::string& payload)
         {
             if (signaler_) {
@@ -27,7 +28,7 @@ void RoomManager::setupPeerManager() {
         }
     );
 
-    // Ex. pour brancher tes DataChannel :
+    // Si besoin, branche tes callbacks DataChannel :
     // peerMgr_->onDataChannelOpen(...);
     // peerMgr_->onDataChannelMessage(...);
 }
@@ -58,14 +59,15 @@ const std::string& RoomManager::createAndJoin() {
             "0.peerjs.com", 443, "peerjs", localId_, "auto"
         );
 
-        // On n'envoie plus de ROOM_JOIN en REST/unicast ici
         signaler_->setOnOpen([this]() {
             LOG_INFO("WebSocket ouverte pour " + localId_);
         });
 
-        signaler_->setOnMessage([this](auto&& type,
-                                       auto&& src,
-                                       auto&& payload) {
+        signaler_->setOnMessage([this](
+            const std::string& type,
+            const std::string& src,
+            const std::string& payload)
+        {
             LOG_DEBUG("RECU: type=" + type + " src=" + src);
             handleSignalingMessage(type, src, payload);
         });
@@ -87,9 +89,11 @@ void RoomManager::join(const std::string& code) {
         LOG_INFO("WebSocket ouverte pour " + localId_);
     });
 
-    signaler_->setOnMessage([this](auto&& type,
-                                   auto&& src,
-                                   auto&& payload) {
+    signaler_->setOnMessage([this](
+        const std::string& type,
+        const std::string& src,
+        const std::string& payload)
+    {
         LOG_DEBUG("RECU: type=" + type + " src=" + src);
         handleSignalingMessage(type, src, payload);
     });
@@ -111,7 +115,6 @@ void RoomManager::handleSignalingMessage(const std::string& type,
     auto data = json::parse(payload);
 
     if (type == "ROOM_JOIN") {
-        // Si tu veux toujours exploiter ROOM_JOIN pour déclencher
         LOG_INFO("ROOM_JOIN recu de " + src);
         peerMgr_->connectToPeer(src);
         if (peerJoinedCb_) peerJoinedCb_(src);
