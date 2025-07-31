@@ -1,4 +1,6 @@
 #include "network/RoomManager.hpp"
+#include "network/PeerJSClient.hpp"
+
 #include "Logger.hpp"
 #include <nlohmann/json.hpp>
 #include <random>
@@ -37,10 +39,24 @@ const std::string& RoomManager::createAndJoin() {
 
         signaler_->setOnOpen([this]() {
             LOG_INFO("WebSocket PeerJS ouverte pour " + localId_);
+
+            std::vector<std::string> peers;
+            try {
+                peers = getPeers("0.peerjs.com", 443, true, 5, "peerjs");
+            } catch (const std::exception& e) {
+                LOG_WARNING(std::string("Erreur REST getPeers: ") + e.what());
+            }
+
             json j;
             j["room"] = roomCode_;
             j["id"]   = localId_;
-            signaler_->send("ROOM_JOIN", "", j.dump());
+
+            for (const auto& peerId : peers) {
+                if (peerId != localId_) {
+                    LOG_INFO("Annonce ROOM_JOIN a " + peerId);
+                    signaler_->send("ROOM_JOIN", peerId, j.dump());
+                }
+            }
         });
 
         signaler_->setOnMessage([this](auto&& type, auto&& src, auto&& payload) {
@@ -63,10 +79,25 @@ void RoomManager::join(const std::string& code) {
 
     signaler_->setOnOpen([this]() {
         LOG_INFO("WebSocket PeerJS ouverte pour " + localId_);
+
+        // Découverte REST
+        std::vector<std::string> peers;
+        try {
+            peers = getPeers("0.peerjs.com", 443, true, 5, "peerjs");
+        } catch (const std::exception& e) {
+            LOG_WARNING(std::string("Erreur REST getPeers: ") + e.what());
+        }
+
         json j;
         j["room"] = roomCode_;
         j["id"]   = localId_;
-        signaler_->send("ROOM_JOIN", "", j.dump());
+
+        for (const auto& peerId : peers) {
+            if (peerId != localId_) {
+                LOG_INFO("Annonce ROOM_JOIN a " + peerId);
+                signaler_->send("ROOM_JOIN", peerId, j.dump());
+            }
+        }
     });
 
     signaler_->setOnMessage([this](auto&& type, auto&& src, auto&& payload) {
@@ -92,6 +123,11 @@ void RoomManager::handleSignalingMessage(const std::string& type,
         LOG_INFO("ROOM_JOIN recu de " + src);
         if (src != localId_ && peerJoinedCb_) {
             peerJoinedCb_(src);
+
+            json j;
+            j["room"] = roomCode_;
+            j["id"]   = localId_;
+            signaler_->send("ROOM_JOIN", src, j.dump());
         }
     }
 }
